@@ -69,16 +69,24 @@ class Library:
 
     def download_library(self, platform=None):
         """Download all games in the library"""
-        with ThreadPoolExecutor(max_workers=self.jobs) as executor:
-            i = [0]
+        if self.jobs <= 1:
+            print("Run without Threading")
             l = len(self.games)
-            lock = threading.RLock()
+            for (i, g) in enumerate(self.games):
+                g.download(self.login, platform)
+                print(f"Downloaded {g.name} ({i+1} of {l})")
+        else:
+            print(f"Run {self.jobs} Threads")
+            with ThreadPoolExecutor(max_workers=self.jobs) as executor:
+                i = [0]
+                l = len(self.games)
+                lock = threading.RLock()
 
-            def dl(i, g):
-                x = g.download(self.login, platform)
-                with lock:
-                    i[0] += 1
-                print(f"Downloaded {g.name} ({i[0]} of {l})")
-                return x
+                def dl(i, g):
+                    x = g.download(self.login, platform)
+                    with lock:
+                        i[0] += 1
+                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    return x
 
-            executor.map(functools.partial(dl, i), self.games)
+                executor.map(functools.partial(dl, i), self.games)
