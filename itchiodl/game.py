@@ -68,6 +68,7 @@ class Game:
         logger.debug(f"Downloading {self.name}")
 
         self.load_downloads(token)
+        logger.debug(f"Found {len(self.downloads)} downloads available for {self.name}.")
 
         if not os.path.exists(self.publisher_slug):
             os.mkdir(self.publisher_slug)

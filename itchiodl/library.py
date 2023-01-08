@@ -74,6 +74,7 @@ class Library:
 
     def download_library(self, platform=None):
         """Download all games in the library"""
+        logger.debug(f"Found {len(self.games)} games in library.")
         statuses = []
         if self.jobs <= 1:
             logger.debug("Run without Threading")
