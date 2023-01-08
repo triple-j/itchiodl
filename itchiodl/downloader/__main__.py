@@ -74,7 +74,7 @@ def main():
 
     ok = lib.download_library(args.platform)
     exit_code = ExitCode.SUCCESS if ok else ExitCode.DOWNLOAD_ERROR
-    return exit_code
+    return exit_code.value
 
 
 if __name__ == "__main__":
