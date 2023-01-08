@@ -1,4 +1,5 @@
 import logging
+from pprint import pformat
 import re
 import json
 import os
@@ -112,19 +113,19 @@ class Game:
         """Download a single file, checking for existing files"""
         logger.debug(f"Downloading {d['filename']}")
 
-        if d.get("md5_hash") is None:
-            logger.error(
-                f"Skipping {self.name} - {d['filename']} because we are currently unable to " +
-                "safely download files that are missing hash data."
-            )
-            return DownloadStatus.INVAILD_RESPONSE_DATA
-
         file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
         path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
 
+        given_hash = d.get("md5_hash") is not None
+        if not given_hash:
+            logger.warning("Missing MD5 hash from API response for `%s`:\n%s", file, pformat(d))
+
         if os.path.exists(f"{path}/{file}"):
             logger.info(f"File Already Exists! {file}")
-            if os.path.exists(f"{path}/{file}.md5"):
+            if not given_hash:
+                logger.info(f"Skipping {self.name} - {file}")
+                return DownloadStatus.SKIP_EXISTING_FILE
+            elif os.path.exists(f"{path}/{file}.md5"):
 
                 with open(f"{path}/{file}.md5", "r") as f:
                     md5 = f.read().strip()
@@ -210,13 +211,19 @@ class Game:
 
             return DownloadStatus.HTTP_ERROR
 
-        # Verify
-        if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-            logger.error(f"Failed to verify {file}")
-            return DownloadStatus.HASH_FAILURE
+        if given_hash:
+            # Verify
+            if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
+                logger.error(f"Failed to verify {file}")
+                return DownloadStatus.HASH_FAILURE
 
-        # Create checksum file
-        with open(f"{path}/{file}.md5", "w") as f:
-            f.write(d["md5_hash"])
+            # Create checksum file
+            with open(f"{path}/{file}.md5", "w") as f:
+                f.write(d["md5_hash"])
+        else:
+            logger.warning(
+                "Unable to verify `%s` downloaded correctly due to missing hash data from itch.io",
+                file
+            )
 
         return DownloadStatus.SUCCESS
