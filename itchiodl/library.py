@@ -140,8 +140,10 @@ class Library:
                     raise TypeError('Unknown status type')
 
         error_total = len(errors) + len(failure) + len(exceptions)
-        if len(errors) > 0:
-            logger.warning(f"See `errors.txt` for more information.")
+        if error_total > 0:
+            logger.warning("\n  ".join(["Download Failures:"] + failure + errors + exceptions))
+            if len(errors) > 0:
+                logger.warning(f"See `errors.txt` for more information.")
         logger.info(f"File download summary: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
 
         return bool(error_total < 1)
