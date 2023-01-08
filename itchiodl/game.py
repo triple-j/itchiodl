@@ -22,6 +22,7 @@ class DownloadStatus(Enum):
     NO_DOWNLOAD_ERROR = auto()
     HTTP_ERROR = auto()
     HASH_FAILURE = auto()
+    INVAILD_RESPONSE_DATA = auto()
 
 
 class Game:
@@ -110,6 +111,13 @@ class Game:
     def do_download(self, d, token):
         """Download a single file, checking for existing files"""
         logger.debug(f"Downloading {d['filename']}")
+
+        if d.get("md5_hash") is None:
+            logger.error(
+                f"Skipping {self.name} - {d['filename']} because we are currently unable to " +
+                "safely download files that are missing hash data."
+            )
+            return DownloadStatus.INVAILD_RESPONSE_DATA
 
         file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
         path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")

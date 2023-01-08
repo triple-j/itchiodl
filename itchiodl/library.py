@@ -125,9 +125,16 @@ class Library:
                     success.append(identifier)
                 elif download['status'] == DownloadStatus.SKIP_EXISTING_FILE:
                     skipped.append(identifier)
-                elif download['status'] in [DownloadStatus.NO_DOWNLOAD_ERROR, DownloadStatus.HTTP_ERROR]:
+                elif download['status'] in [
+                    DownloadStatus.NO_DOWNLOAD_ERROR,
+                    DownloadStatus.HTTP_ERROR
+                ]:
                     errors.append(identifier)
-                elif download['status'] in [DownloadStatus.CORRUPTED, DownloadStatus.HASH_FAILURE]:
+                elif download['status'] in [
+                    DownloadStatus.CORRUPTED,
+                    DownloadStatus.HASH_FAILURE,
+                    DownloadStatus.INVAILD_RESPONSE_DATA
+                ]:
                     failure.append(identifier)
                 elif isinstance(download['status'], Exception):
                     exceptions.append(identifier)
