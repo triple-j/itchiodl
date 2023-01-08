@@ -1,6 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
+import logging
 from sys import stderr
 import threading
 from traceback import print_tb
@@ -8,6 +9,9 @@ import requests
 from bs4 import BeautifulSoup
 
 from itchiodl.game import DownloadStatus, Game
+
+
+logger = logging.getLogger(__name__)
 
 
 class Library:
@@ -20,7 +24,7 @@ class Library:
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
-        print("Loading page", page)
+        logger.debug(f"Loading page {page}")
         r = requests.get(
             f"https://api.itch.io/profile/owned-keys?page={page}",
             headers={"Authorization": self.login},
@@ -73,17 +77,17 @@ class Library:
         """Download all games in the library"""
         statuses = []
         if self.jobs <= 1:
-            print("Run without Threading")
+            logger.debug("Run without Threading")
             l = len(self.games)
             for (i, g) in enumerate(self.games):
                 x = g.download(self.login, platform)
-                print(f"Downloaded {g.name} ({i+1} of {l})")
+                logger.debug(f"Downloaded {g.name} ({i+1} of {l})")
                 statuses.append({
                     "name": g.name,
                     "statuses": x
                 })
         else:
-            print(f"Run {self.jobs} Threads")
+            logger.debug(f"Run {self.jobs} Threads")
             with ThreadPoolExecutor(max_workers=self.jobs) as executor:
                 i = [0]
                 l = len(self.games)
@@ -99,7 +103,7 @@ class Library:
                         }]
                     with lock:
                         i[0] += 1
-                    print(f"Downloaded {g.name} ({i[0]} of {l})")
+                    logger.debug(f"Downloaded {g.name} ({i[0]} of {l})")
                     return {
                         "name": g.name,
                         "statuses": x
@@ -135,7 +139,7 @@ class Library:
 
         error_total = len(errors) + len(failure) + len(exceptions)
         if len(errors) > 0:
-            print(f"See `errors.txt` for more information.")
-        print(f"File download summery: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
+            logger.warning(f"See `errors.txt` for more information.")
+        logger.info(f"File download summery: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
 
         return bool(error_total < 1)

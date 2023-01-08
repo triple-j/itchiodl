@@ -1,3 +1,4 @@
+import logging
 import re
 import json
 import os
@@ -9,6 +10,9 @@ from enum import Enum, auto
 
 
 import itchiodl.utils
+
+
+logger = logging.getLogger(__name__)
 
 
 class DownloadStatus(Enum):
@@ -61,7 +65,7 @@ class Game:
 
     def download(self, token, platform):
         """Download a singular file"""
-        print("Downloading", self.name)
+        logger.debug(f"Downloading {self.name}")
 
         # if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
         #    print(f"Skipping Game {self.name}")
@@ -82,7 +86,7 @@ class Game:
                 and d["traits"]
                 and f"p_{platform}" not in d["traits"]
             ):
-                print(f"Skipping {self.name} for platform {d['traits']}")
+                logger.info(f"Skipping {self.name} for platform {d['traits']}")
                 continue
             status = self.do_download(d, token)
             statuses.append({
@@ -108,26 +112,26 @@ class Game:
 
     def do_download(self, d, token):
         """Download a single file, checking for existing files"""
-        print(f"Downloading {d['filename']}")
+        logger.debug(f"Downloading {d['filename']}")
 
         file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
         path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
 
         if os.path.exists(f"{path}/{file}"):
-            print(f"File Already Exists! {file}")
+            logger.info(f"File Already Exists! {file}")
             if os.path.exists(f"{path}/{file}.md5"):
 
                 with open(f"{path}/{file}.md5", "r") as f:
                     md5 = f.read().strip()
 
                     if md5 == d["md5_hash"]:
-                        print(f"Skipping {self.name} - {file}")
+                        logger.info(f"Skipping {self.name} - {file}")
                         return DownloadStatus.SKIP_EXISTING_FILE
-                    print(f"MD5 Mismatch! {file}")
+                    logger.warning(f"MD5 Mismatch! {file}")
             else:
                 md5 = itchiodl.utils.md5sum(f"{path}/{file}")
                 if md5 == d["md5_hash"]:
-                    print(f"Skipping {self.name} - {file}")
+                    logger.info(f"Skipping {self.name} - {file}")
 
                     # Create checksum file
                     with open(f"{path}/{file}.md5", "w") as f:
@@ -142,9 +146,9 @@ class Game:
             if not os.path.exists(f"{path}/old"):
                 os.mkdir(f"{path}/old")
 
-            print(f"Moving {file} to old/")
+            logger.info(f"Moving {file} to old/")
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
-            print(timestamp)
+            logger.debug(timestamp)
             shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
 
         # Get UUID
@@ -169,7 +173,7 @@ class Game:
         try:
             itchiodl.utils.download(url, path, self.name, file)
         except itchiodl.utils.NoDownloadError:
-            print("Http response is not a download, skipping")
+            logger.error("Http response is not a download, skipping")
 
             with open("errors.txt", "a") as f:
                 f.write(
@@ -185,7 +189,7 @@ class Game:
 
             return DownloadStatus.NO_DOWNLOAD_ERROR
         except urllib.error.HTTPError as e:
-            print("This one has broken due to an HTTP error!!")
+            logger.error("This one has broken due to an HTTP error!!")
 
             with open("errors.txt", "a") as f:
                 f.write(
@@ -204,7 +208,7 @@ class Game:
 
         # Verify
         if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-            print(f"Failed to verify {file}")
+            logger.error(f"Failed to verify {file}")
             return DownloadStatus.HASH_FAILURE
 
         # Create checksum file

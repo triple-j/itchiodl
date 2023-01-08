@@ -1,10 +1,14 @@
 import argparse
 from enum import Enum
 from getpass import getpass
+import logging
 import re
 import sys
 
 import itchiodl
+
+
+logger = logging.getLogger(__name__)
 
 
 class ExitCode(Enum):
@@ -13,6 +17,8 @@ class ExitCode(Enum):
 
 
 def main():
+    logging.basicConfig(level=logging.DEBUG)
+
     parser = argparse.ArgumentParser(prog="python -m hstp", description="Build an ")
 
     parser.add_argument(
