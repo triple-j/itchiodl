@@ -2,9 +2,8 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import logging
-from sys import stderr
 import threading
-from traceback import print_tb
+from traceback import extract_tb, format_list
 import requests
 from bs4 import BeautifulSoup
 
@@ -131,9 +130,11 @@ class Library:
                     failure.append(identifier)
                 elif isinstance(download['status'], Exception):
                     exceptions.append(identifier)
-                    print(f"Traceback: {identifier}", file=stderr)
-                    print_tb(download['status'].__traceback__, file=stderr)
-                    print(f"{type(download['status']).__name__}: {download['status']}", file=stderr)
+                    logger.critical(
+                        f"Traceback: {identifier}\n" +
+                        "".join(format_list(extract_tb(download['status'].__traceback__))) +
+                        f"{type(download['status']).__name__}: {download['status']}"
+                    )
                 else:
                     raise TypeError('Unknown status type')
 
