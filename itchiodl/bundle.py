@@ -1,4 +1,8 @@
+import logging
 from bs4 import BeautifulSoup as soup
+
+
+logger = logging.getLogger(__name__)
 
 
 class Bundle:
@@ -18,7 +22,7 @@ class Bundle:
         while i < pages:
             if self.load_game(i):
                 i += 1
-                print(f"Processing Page {i} of {pages}")
+                logger.debug(f"Processing Page {i} of {pages}")
 
     def load_game(self, i):
         """Load 1 game. This will refresh the game afterwards, as the csrf token
@@ -28,7 +32,7 @@ class Bundle:
         for g in s.select("div.game_row"):
             name = g.select("h2 a")[0].text
             if f := g.find("form"):
-                print(f"Processing {name}")
+                logger.debug(f"Processing {name}")
 
                 game_id = f.find("input", {"name": "game_id"})["value"]
                 csrf_token = f.find("input", {"name": "csrf_token"})["value"]

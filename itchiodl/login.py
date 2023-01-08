@@ -1,6 +1,10 @@
 import json
+import logging
 from bs4 import BeautifulSoup as soup
 import requests
+
+
+logger = logging.getLogger(__name__)
 
 
 warning = (
@@ -37,16 +41,20 @@ def LoginAPI(user, password):
         {"username": user, "password": password, "source": "desktop"},
     )
     if r.status_code != 200:
-        print(f"Error: {r.status_code} is not 200")
-        print(warning)
-        print(r.text)
+        logger.error("\n".join([
+            f"Error: {r.status_code} is not 200",
+            warning,
+            r.text,
+        ]))
         raise RuntimeError
     t = json.loads(r.text)
 
     if not t["success"]:
-        print("Error: success key is not true")
-        print(warning)
-        print(r.text)
+        logger.error("\n".join([
+            "Error: success key is not true",
+            warning,
+            r.text,
+        ]))
         raise RuntimeError
 
     return t["key"]["key"]

@@ -5,6 +5,9 @@ import hashlib
 import requests
 
 
+logger = logging.getLogger(__name__)
+
+
 class NoDownloadError(Exception):
     """No download found exception"""
 
@@ -13,7 +16,7 @@ def download(url, path, name, file):
     """Downloads a file from a url and saves it to a path, skips it if it already exists."""
 
     desc = f"{name} - {file}"
-    print(f"Downloading {desc}")
+    logger.debug(f"Downloading {desc}")
     rsp = requests.get(url, stream=True)
 
     if (
@@ -34,7 +37,7 @@ def download(url, path, name, file):
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
 
-    print(f"Downloaded {filename}")
+    logger.debug(f"Downloaded {filename}")
     return f"{path}/{filename}", True
 
 
