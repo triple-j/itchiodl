@@ -1,9 +1,15 @@
 import argparse
+from enum import Enum
 from getpass import getpass
 import re
 import sys
 
 import itchiodl
+
+
+class ExitCode(Enum):
+    SUCCESS = 0
+    DOWNLOAD_ERROR = 128
 
 
 def main():
@@ -61,7 +67,7 @@ def main():
         lib.load_owned_games()
 
     ok = lib.download_library(args.platform)
-    exit_code = 0 if ok else 1
+    exit_code = ExitCode.SUCCESS if ok else ExitCode.DOWNLOAD_ERROR
     return exit_code
 
 
