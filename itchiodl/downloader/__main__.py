@@ -1,6 +1,7 @@
 import argparse
 from getpass import getpass
 import re
+import sys
 
 import itchiodl
 
@@ -59,8 +60,10 @@ def main():
     else:
         lib.load_owned_games()
 
-    lib.download_library(args.platform)
+    ok = lib.download_library(args.platform)
+    exit_code = 0 if ok else 1
+    return exit_code
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

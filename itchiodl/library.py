@@ -2,10 +2,11 @@ import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
 import threading
+from traceback import print_tb
 import requests
 from bs4 import BeautifulSoup
 
-from itchiodl.game import Game
+from itchiodl.game import DownloadStatus, Game
 
 
 class Library:
@@ -69,12 +70,17 @@ class Library:
 
     def download_library(self, platform=None):
         """Download all games in the library"""
+        statuses = []
         if self.jobs <= 1:
             print("Run without Threading")
             l = len(self.games)
             for (i, g) in enumerate(self.games):
-                g.download(self.login, platform)
+                x = g.download(self.login, platform)
                 print(f"Downloaded {g.name} ({i+1} of {l})")
+                statuses.append({
+                    "name": g.name,
+                    "statuses": x
+                })
         else:
             print(f"Run {self.jobs} Threads")
             with ThreadPoolExecutor(max_workers=self.jobs) as executor:
@@ -83,10 +89,52 @@ class Library:
                 lock = threading.RLock()
 
                 def dl(i, g):
-                    x = g.download(self.login, platform)
+                    try:
+                        x = g.download(self.login, platform)
+                    except Exception as e:
+                        x = [{
+                            "filename": "UNKNOWN",
+                            "status": e
+                        }]
                     with lock:
                         i[0] += 1
                     print(f"Downloaded {g.name} ({i[0]} of {l})")
-                    return x
+                    return {
+                        "name": g.name,
+                        "statuses": x
+                    }
 
-                executor.map(functools.partial(dl, i), self.games)
+                for result in executor.map(functools.partial(dl, i), self.games):
+                    statuses.append(result)
+
+        # Summery
+        success = []
+        errors = []
+        failure = []
+        skipped = []
+        exceptions = []
+        for game_dl in statuses:
+            for download in game_dl['statuses']:
+                identifier = f"{game_dl['name']}: {download['filename']}"
+                if download['status'] == DownloadStatus.SUCCESS:
+                    success.append(identifier)
+                elif download['status'] == DownloadStatus.SKIP_EXISTING_FILE:
+                    skipped.append(identifier)
+                elif download['status'] in [DownloadStatus.NO_DOWNLOAD_ERROR, DownloadStatus.HTTP_ERROR]:
+                    errors.append(identifier)
+                elif download['status'] in [DownloadStatus.CORRUPTED, DownloadStatus.HASH_FAILURE]:
+                    failure.append(identifier)
+                elif isinstance(download['status'], Exception):
+                    exceptions.append(identifier)
+                    print(f"Traceback: {identifier}")
+                    print_tb(download['status'].__traceback__)
+                    print(f"{type(download['status']).__name__}: {download['status']}")
+                else:
+                    raise TypeError('Unknown status type')
+
+        error_total = len(errors) + len(failure) + len(exceptions)
+        if len(errors) > 0:
+            print(f"See `errors.txt` for more information.")
+        print(f"File download summery: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
+
+        return bool(error_total < 1)

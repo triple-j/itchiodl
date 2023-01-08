@@ -5,9 +5,19 @@ import urllib
 import datetime
 import shutil
 import requests
+from enum import Enum, auto
 
 
 import itchiodl.utils
+
+
+class DownloadStatus(Enum):
+    SUCCESS = auto()
+    SKIP_EXISTING_FILE = auto()
+    CORRUPTED = auto()
+    NO_DOWNLOAD_ERROR = auto()
+    HTTP_ERROR = auto()
+    HASH_FAILURE = auto()
 
 
 class Game:
@@ -65,6 +75,7 @@ class Game:
         if not os.path.exists(f"{self.publisher_slug}/{self.game_slug}"):
             os.mkdir(f"{self.publisher_slug}/{self.game_slug}")
 
+        statuses = []
         for d in self.downloads:
             if (
                 platform is not None
@@ -73,7 +84,11 @@ class Game:
             ):
                 print(f"Skipping {self.name} for platform {d['traits']}")
                 continue
-            self.do_download(d, token)
+            status = self.do_download(d, token)
+            statuses.append({
+                "filename": d['filename'],
+                "status": status
+            })
 
         with open(f"{self.publisher_slug}/{self.game_slug}.json", "w") as f:
             json.dump(
@@ -88,6 +103,8 @@ class Game:
                 f,
                 indent=2,
             )
+
+        return statuses
 
     def do_download(self, d, token):
         """Download a single file, checking for existing files"""
@@ -105,7 +122,7 @@ class Game:
 
                     if md5 == d["md5_hash"]:
                         print(f"Skipping {self.name} - {file}")
-                        return
+                        return DownloadStatus.SKIP_EXISTING_FILE
                     print(f"MD5 Mismatch! {file}")
             else:
                 md5 = itchiodl.utils.md5sum(f"{path}/{file}")
@@ -115,12 +132,12 @@ class Game:
                     # Create checksum file
                     with open(f"{path}/{file}.md5", "w") as f:
                         f.write(d["md5_hash"])
-                    return
+                    return DownloadStatus.SKIP_EXISTING_FILE
                 # Old Download or corrupted file?
                 corrupted = False
                 if corrupted:
                     os.remove(f"{path}/{file}")
-                    return
+                    return DownloadStatus.CORRUPTED
 
             if not os.path.exists(f"{path}/old"):
                 os.mkdir(f"{path}/old")
@@ -166,7 +183,7 @@ class Game:
                     ---------------------------------------------------------\n """
                 )
 
-            return
+            return DownloadStatus.NO_DOWNLOAD_ERROR
         except urllib.error.HTTPError as e:
             print("This one has broken due to an HTTP error!!")
 
@@ -183,13 +200,15 @@ class Game:
                     ---------------------------------------------------------\n """
                 )
 
-            return
+            return DownloadStatus.HTTP_ERROR
 
         # Verify
         if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
             print(f"Failed to verify {file}")
-            return
+            return DownloadStatus.HASH_FAILURE
 
         # Create checksum file
         with open(f"{path}/{file}.md5", "w") as f:
             f.write(d["md5_hash"])
+
+        return DownloadStatus.SUCCESS
