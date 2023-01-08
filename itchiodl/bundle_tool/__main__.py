@@ -1,8 +1,11 @@
 from getpass import getpass
 import itchiodl
+from itchiodl.logging import configLogging
 
 
 def main():
+    configLogging()
+
     user = input("Username: ")
     password = getpass("Password: ")
 

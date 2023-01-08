@@ -6,7 +6,7 @@ import re
 import sys
 
 import itchiodl
-from itchiodl.utils import ColoredLogFormatter
+from itchiodl.logging import configLogging
 
 
 logger = logging.getLogger(__name__)
@@ -18,10 +18,7 @@ class ExitCode(Enum):
 
 
 def main():
-    formatter = ColoredLogFormatter(logging.BASIC_FORMAT, None, '%')
-    stream = logging.StreamHandler()
-    stream.setFormatter(formatter)
-    logging.basicConfig(level=logging.DEBUG, handlers=[stream])
+    configLogging()
 
     parser = argparse.ArgumentParser(prog="python -m hstp", description="Build an ")
 
