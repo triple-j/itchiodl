@@ -67,10 +67,6 @@ class Game:
         """Download a singular file"""
         logger.debug(f"Downloading {self.name}")
 
-        # if os.path.exists(f"{self.publisher_slug}/{self.game_slug}.json"):
-        #    print(f"Skipping Game {self.name}")
-        #    return
-
         self.load_downloads(token)
 
         if not os.path.exists(self.publisher_slug):
@@ -169,7 +165,6 @@ class Game:
                 f"https://api.itch.io/uploads/{d['id']}/"
                 + f"download?api_key={token}&uuid={j['uuid']}"
             )
-        # response_code = urllib.request.urlopen(url).getcode()
         try:
             itchiodl.utils.download(url, path, self.name, file)
         except itchiodl.utils.NoDownloadError:

@@ -37,6 +37,4 @@ class Bundle:
 
                 r = self.login.post(f"{self.url}?page={i}", data=data)
                 return False
-            # else:
-            #    print(f"Skipping {name} - Already in Library")
         return True
