@@ -1,6 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 import functools
+from sys import stderr
 import threading
 from traceback import print_tb
 import requests
@@ -126,9 +127,9 @@ class Library:
                     failure.append(identifier)
                 elif isinstance(download['status'], Exception):
                     exceptions.append(identifier)
-                    print(f"Traceback: {identifier}")
-                    print_tb(download['status'].__traceback__)
-                    print(f"{type(download['status']).__name__}: {download['status']}")
+                    print(f"Traceback: {identifier}", file=stderr)
+                    print_tb(download['status'].__traceback__, file=stderr)
+                    print(f"{type(download['status']).__name__}: {download['status']}", file=stderr)
                 else:
                     raise TypeError('Unknown status type')
 
