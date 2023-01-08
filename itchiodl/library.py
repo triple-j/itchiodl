@@ -112,7 +112,7 @@ class Library:
                 for result in executor.map(functools.partial(dl, i), self.games):
                     statuses.append(result)
 
-        # Summery
+        # Summary
         success = []
         errors = []
         failure = []
@@ -140,6 +140,6 @@ class Library:
         error_total = len(errors) + len(failure) + len(exceptions)
         if len(errors) > 0:
             logger.warning(f"See `errors.txt` for more information.")
-        logger.info(f"File download summery: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
+        logger.info(f"File download summary: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
 
         return bool(error_total < 1)
