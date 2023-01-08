@@ -143,7 +143,7 @@ class Game:
                 os.mkdir(f"{path}/old")
 
             logger.info(f"Moving {file} to old/")
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d")
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
             logger.debug(timestamp)
             shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
 
