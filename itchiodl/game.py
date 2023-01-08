@@ -67,10 +67,10 @@ class Game:
 
     def download(self, token, platform):
         """Download a singular file"""
-        logger.debug(f"Downloading {self.name}")
+        logger.debug("Downloading `%s`", self.name)
 
         self.load_downloads(token)
-        logger.debug(f"Found {len(self.downloads)} downloads available for {self.name}.")
+        logger.debug("Found %d downloads available for `%s`.", len(self.downloads), self.name)
 
         if not os.path.exists(self.publisher_slug):
             os.mkdir(self.publisher_slug)
@@ -85,7 +85,7 @@ class Game:
                 and d["traits"]
                 and f"p_{platform}" not in d["traits"]
             ):
-                logger.info(f"Skipping {self.name} for platform {d['traits']}")
+                logger.info("Skipping `%s` for platform %s", self.name, d['traits'])
                 continue
             status = self.do_download(d, token)
             statuses.append({
@@ -111,7 +111,7 @@ class Game:
 
     def do_download(self, d, token):
         """Download a single file, checking for existing files"""
-        logger.debug(f"Downloading {d['filename']}")
+        logger.debug("Downloading `%s`", d['filename'])
 
         file = itchiodl.utils.clean_path(d["filename"] or d["display_name"] or d["id"])
         path = itchiodl.utils.clean_path(f"{self.publisher_slug}/{self.game_slug}")
@@ -121,9 +121,9 @@ class Game:
             logger.warning("Missing MD5 hash from API response for `%s`:\n%s", file, pformat(d))
 
         if os.path.exists(f"{path}/{file}"):
-            logger.info(f"File Already Exists! {file}")
+            logger.info("File Already Exists! `%s`", file)
             if not given_hash:
-                logger.info(f"Skipping {self.name} - {file}")
+                logger.info("Skipping `%s` - `%s`", self.name, file)
                 return DownloadStatus.SKIP_EXISTING_FILE
             elif os.path.exists(f"{path}/{file}.md5"):
 
@@ -131,13 +131,13 @@ class Game:
                     md5 = f.read().strip()
 
                     if md5 == d["md5_hash"]:
-                        logger.info(f"Skipping {self.name} - {file}")
+                        logger.info("Skipping `%s` - `%s`", self.name, file)
                         return DownloadStatus.SKIP_EXISTING_FILE
                     logger.warning(f"MD5 Mismatch! {file}")
             else:
                 md5 = itchiodl.utils.md5sum(f"{path}/{file}")
                 if md5 == d["md5_hash"]:
-                    logger.info(f"Skipping {self.name} - {file}")
+                    logger.info("Skipping `%s` - `%s`", self.name, file)
 
                     # Create checksum file
                     with open(f"{path}/{file}.md5", "w") as f:
@@ -152,7 +152,7 @@ class Game:
             if not os.path.exists(f"{path}/old"):
                 os.mkdir(f"{path}/old")
 
-            logger.info(f"Moving {file} to old/")
+            logger.info("Moving `%s` to `old/`", file)
             timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
             logger.debug(timestamp)
             shutil.move(f"{path}/{file}", f"{path}/old/{timestamp}-{file}")
@@ -214,7 +214,7 @@ class Game:
         if given_hash:
             # Verify
             if itchiodl.utils.md5sum(f"{path}/{file}") != d["md5_hash"]:
-                logger.error(f"Failed to verify {file}")
+                logger.error("Failed to verify `%s`", file)
                 return DownloadStatus.HASH_FAILURE
 
             # Create checksum file

@@ -23,7 +23,7 @@ class Library:
 
     def load_game_page(self, page):
         """Load a page of games via the API"""
-        logger.debug(f"Loading page {page}")
+        logger.debug("Loading page %d", page)
         r = requests.get(
             f"https://api.itch.io/profile/owned-keys?page={page}",
             headers={"Authorization": self.login},
@@ -74,20 +74,20 @@ class Library:
 
     def download_library(self, platform=None):
         """Download all games in the library"""
-        logger.debug(f"Found {len(self.games)} games in library.")
+        logger.debug("Found %d games in library.", len(self.games))
         statuses = []
         if self.jobs <= 1:
             logger.debug("Run without Threading")
             l = len(self.games)
             for (i, g) in enumerate(self.games):
                 x = g.download(self.login, platform)
-                logger.debug(f"Downloaded {g.name} ({i+1} of {l})")
+                logger.debug("Downloaded %s (%d of %d)", g.name, i+1, l)
                 statuses.append({
                     "name": g.name,
                     "statuses": x
                 })
         else:
-            logger.debug(f"Run {self.jobs} Threads")
+            logger.debug("Run %d Threads", self.jobs)
             with ThreadPoolExecutor(max_workers=self.jobs) as executor:
                 i = [0]
                 l = len(self.games)
@@ -103,7 +103,7 @@ class Library:
                         }]
                     with lock:
                         i[0] += 1
-                    logger.debug(f"Downloaded {g.name} ({i[0]} of {l})")
+                    logger.debug("Downloaded %s (%d of %d)", g.name, i[0], l)
                     return {
                         "name": g.name,
                         "statuses": x
@@ -139,9 +139,11 @@ class Library:
                 elif isinstance(download['status'], Exception):
                     exceptions.append(identifier)
                     logger.critical(
-                        f"Traceback: {identifier}\n" +
-                        "".join(format_list(extract_tb(download['status'].__traceback__))) +
-                        f"{type(download['status']).__name__}: {download['status']}"
+                        "Traceback: %s\n%s%s: %s",
+                        identifier,
+                        "".join(format_list(extract_tb(download['status'].__traceback__))),
+                        type(download['status']).__name__,
+                        download['status']
                     )
                 else:
                     raise TypeError('Unknown status type')
@@ -150,7 +152,12 @@ class Library:
         if error_total > 0:
             logger.warning("\n  ".join(["Download Failures:"] + failure + errors + exceptions))
             if len(errors) > 0:
-                logger.warning(f"See `errors.txt` for more information.")
-        logger.info(f"File download summary: Downloaded({len(success)}) Skipped({len(skipped)}) Failed({error_total})")
+                logger.warning("See `errors.txt` for more information.")
+        logger.info(
+            "File download summary: Downloaded(%d) Skipped(%d) Failed(%d)",
+            len(success),
+            len(skipped),
+            error_total
+        )
 
         return bool(error_total < 1)

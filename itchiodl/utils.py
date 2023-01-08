@@ -16,7 +16,7 @@ def download(url, path, name, file):
     """Downloads a file from a url and saves it to a path, skips it if it already exists."""
 
     desc = f"{name} - {file}"
-    logger.debug(f"Downloading {desc}")
+    logger.debug("Downloading %s", desc)
     rsp = requests.get(url, stream=True)
 
     if (
@@ -37,7 +37,7 @@ def download(url, path, name, file):
         for chunk in rsp.iter_content(10240):
             f.write(chunk)
 
-    logger.debug(f"Downloaded {filename}")
+    logger.debug("Downloaded %s", filename)
     return f"{path}/{filename}", True
 
 
