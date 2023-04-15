@@ -11,6 +11,14 @@ def main():
     )
 
     parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=str,
+        default=".",
+        help="The location to store the downloaded files, defaults to the current working directory",
+    )
+
+    parser.add_argument(
         "-k", "--api-key", help="Use API key instead of username/password"
     )
 
@@ -57,7 +65,9 @@ def main():
     else:
         l = args.api_key
 
-    lib = itchiodl.Library(l, jobs=args.jobs, human_folders=args.human_folders)
+    lib = itchiodl.Library(
+        l, jobs=args.jobs, human_folders=args.human_folders, output_dir=args.output_dir
+    )
 
     if args.download_publisher:
         lib.load_games(args.download_publisher)
