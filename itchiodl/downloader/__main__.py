@@ -6,7 +6,9 @@ import itchiodl
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="itch-download", description="Download / archive your itch.io library.")
+    parser = argparse.ArgumentParser(
+        prog="itch-download", description="Download / archive your itch.io library."
+    )
 
     parser.add_argument(
         "-k", "--api-key", help="Use API key instead of username/password"
